@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация в Сервис</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14pt;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        header {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            text-align: center;
+            color: white;
+        }
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .loader-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            min-width: 350px;
+        }
+        .loader-text {
+            font-size: 18pt;
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.1s linear;
+        }
+        .loader-percent {
+            margin-top: 10px;
+            font-size: 16pt;
+        }
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .step {
+            width: 40px;
+            height: 40px;
+            background: #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .step.active {
+            background: #667eea;
+            color: white;
+        }
+        .step.completed {
+            background: #4caf50;
+            color: white;
+        }
+        .step-line {
+            width: 60px;
+            height: 3px;
+            background: #ddd;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .reg-input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14pt;
+        }
+        .form-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14pt;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .btn-cancel, .btn-back {
+            background: #e53e3e;
+        }
+        .btn-send, .btn-verify {
+            margin-top: 10px;
+        }
+        .code-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .card-inputs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-part {
+            width: 70px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14pt;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .checkbox-label input {
+            width: 20px;
+            height: 20px;
+        }
+        .final-box {
+            text-align: center;
+            padding: 20px;
+        }
+        .final-box h2 {
+            color: #4caf50;
+        }
+        .welcome-box {
+            text-align: center;
+        }
+        .welcome-box h2 span {
+            color: #667eea;
+        }
+        .step-desc {
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Сервис регистрации</h1>
+    </header>
+
+    <!-- Лоадер -->
+    <section id="loader">
+        <div class="loader-container">
+            <div class="loader-text">Загрузка...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="loader-percent" id="loaderPercent">0%</div>
+        </div>
+    </section>
+
+    <!-- Основной контент -->
+    <main id="page" style="display: none;">
+        <div class="container">
+            <!-- Индикатор шагов -->
+            <div class="step-indicator" id="stepIndicator" style="display: none;">
+                <div class="step step1 active">1</div>
+                <div class="step-line"></div>
+                <div class="step step2">2</div>
+                <div class="step-line"></div>
+                <div class="step step3">3</div>
+                <div class="step-line"></div>
+                <div class="step step4">✓</div>
+            </div>
+
+            <!-- Фрейм 0: Приветствие -->
+            <section id="frame_0">
+                <div class="welcome-box">
+                    <h2>Добро пожаловать в <span>Сервис</span>!</h2>
+                    <p>Для продолжения нужно зарегистрироваться</p>
+                    <button type="button" id="startRegBtn">Регистрация</button>
+                </div>
+            </section>
+
+            <!-- Фрейм 1 -->
+            <section id="frame_1" style="display: none;">
+                <h2>Шаг 1. Персональные данные</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Имя:</label>
+                        <input type="text" id="firstname" class="reg-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Фамилия:</label>
+                        <input type="text" id="lastname" class="reg-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Электронная почта:</label>
+                    <input type="email" id="email" class="reg-input">
+                </div>
+                <div class="form-group">
+                    <label>Адрес:</label>
+                    <input type="text" id="address" class="reg-input">
+                </div>
+                <div class="form-group">
+                    <label>Страна:</label>
+                    <select id="country" class="reg-input"></select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Пароль:</label>
+                        <input type="password" id="password" class="reg-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Повторите пароль:</label>
+                        <input type="password" id="confirmPassword" class="reg-input">
+                    </div>
+                </div>
+                <div class="form-buttons">
+                    <button class="btn-cancel" id="cancelBtn1">Отмена</button>
+                    <button class="btn-next" id="nextBtn1" disabled>Далее</button>
+                </div>
+            </section>
+
+            <!-- Фрейм 2 -->
+            <section id="frame_2" style="display: none;">
+                <h2>Шаг 2. Телефонный номер</h2>
+                <p class="step-desc">В целях безопасности Сервису нужно подтверждение вашего телефонного номера. На ваш номер будет отправлен 4-значный код подтверждения.</p>
+                <div class="form-group">
+                    <label>Номер телефона:</label>
+                    <input type="tel" id="phone" class="reg-input" placeholder="+7 (___) ___-__-__">
+                    <button class="btn-send" id="sendCodeBtn" disabled>Отправить</button>
+                </div>
+                <div id="codeSection" style="display: none; margin-top: 20px;">
+                    <label>Код подтверждения:</label>
+                    <input type="text" id="verifyCode" maxlength="4" class="reg-input" style="width:150px;">
+                    <button class="btn-verify" id="verifyBtn" disabled>Проверить</button>
+                </div>
+                <div class="form-buttons">
+                    <button class="btn-back" id="backBtn2">Назад</button>
+                    <button class="btn-next" id="nextBtn2" disabled>Далее</button>
+                </div>
+            </section>
+
+            <!-- Фрейм 3 -->
+            <section id="frame_3" style="display: none;">
+                <h2>Шаг 3. Метод оплаты</h2>
+                <p class="step-desc">Для совершения покупок в Сервисе необходимо подключить банковскую карту.</p>
+                <div class="form-group">
+                    <label>Номер карты:</label>
+                    <div class="card-inputs">
+                        <input type="text" id="card1" maxlength="4" size="4" placeholder="1111" class="card-part">
+                        <span>-</span>
+                        <input type="text" id="card2" maxlength="4" size="4" placeholder="2222" class="card-part">
+                        <span>-</span>
+                        <input type="text" id="card3" maxlength="4" size="4" placeholder="3333" class="card-part">
+                        <span>-</span>
+                        <input type="text" id="card4" maxlength="4" size="4" placeholder="4444" class="card-part">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Срок действия:</label>
+                        <input type="text" id="expiry" placeholder="MM/YY" maxlength="5" class="reg-input" style="width:120px;">
+                    </div>
+                    <div class="form-group">
+                        <label>CVV:</label>
+                        <input type="password" id="cvv" maxlength="3" placeholder="XXX" class="reg-input" style="width:80px;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="agreeTerms"> 
+                        Я согласен с любыми условиями, ничего не хочу читать, дайте мне уже пользоваться сервисом
+                    </label>
+                </div>
+                <div class="form-buttons">
+                    <button class="btn-back" id="backBtn3">Назад</button>
+                    <button class="btn-finish" id="finishBtn" disabled>Завершить</button>
+                </div>
+            </section>
+
+            <!-- Фрейм 4 -->
+            <section id="frame_4" style="display: none;">
+                <div class="final-box">
+                    <h2>Поздравляем!</h2>
+                    <p>Регистрация успешно завершена!</p>
+                    <p>Благодарим за использование нашего сервиса!</p>
+                    <button class="btn-reset" id="resetBtn">На главную</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Лоадер
+        let progress = 0;
+        const progressFill = document.getElementById('progressFill');
+        const percentSpan = document.getElementById('loaderPercent');
+        const loader = document.getElementById('loader');
+        const mainPage = document.getElementById('page');
+        const stepIndicator = document.getElementById('stepIndicator');
+
+        const interval = setInterval(() => {
+            progress += 2;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    mainPage.style.display = 'block';
+                    stepIndicator.style.display = 'flex';
+                }, 200);
+            }
+            if (progressFill) progressFill.style.width = progress + '%';
+            if (percentSpan) percentSpan.textContent = progress + '%';
+        }, 40);
+
+        // Данные
+        let currentFrame = 0;
+        let codeVerified = false;
+
+        // Функция сброса всех полей
+        function resetAllFields() {
+            // Сброс полей шага 1
+            document.getElementById('firstname').value = '';
+            document.getElementById('lastname').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('address').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('confirmPassword').value = '';
+            
+            // Сброс полей шага 2
+            document.getElementById('phone').value = '';
+            document.getElementById('verifyCode').value = '';
+            document.getElementById('codeSection').style.display = 'none';
+            document.getElementById('sendCodeBtn').disabled = true;
+            document.getElementById('verifyBtn').disabled = true;
+            
+            // Сброс полей шага 3
+            document.getElementById('card1').value = '';
+            document.getElementById('card2').value = '';
+            document.getElementById('card3').value = '';
+            document.getElementById('card4').value = '';
+            document.getElementById('expiry').value = '';
+            document.getElementById('cvv').value = '';
+            document.getElementById('agreeTerms').checked = false;
+            
+            // Сброс переменных
+            codeVerified = false;
+            
+            // Сброс кнопок
+            document.getElementById('nextBtn1').disabled = true;
+            document.getElementById('nextBtn2').disabled = true;
+            document.getElementById('finishBtn').disabled = true;
+            
+            // Сброс индикатора шагов
+            const steps = document.querySelectorAll('.step');
+            steps.forEach((step, idx) => {
+                step.classList.remove('active', 'completed');
+                if (idx === 0) step.classList.add('active');
+            });
+        }
+
+        // Список стран
+        const countries = ['Россия', 'США', 'Великобритания', 'Германия', 'Франция', 'Италия', 'Испания', 'Китай', 'Япония', 'Канада'];
+        const countrySelect = document.getElementById('country');
+        countries.forEach(c => {
+            let option = document.createElement('option');
+            option.value = c;
+            option.textContent = c;
+            countrySelect.appendChild(option);
+        });
+
+        function showFrame(frameId) {
+            document.querySelectorAll('section[id^="frame_"]').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(`frame_${frameId}`).style.display = 'block';
+            currentFrame = frameId;
+            
+            // Обновление индикатора
+            document.querySelectorAll('.step').forEach((step, idx) => {
+                step.classList.remove('active', 'completed');
+                if (idx + 1 < currentFrame && currentFrame <= 3) {
+                    step.classList.add('completed');
+                } else if (idx + 1 === currentFrame && currentFrame <= 3) {
+                    step.classList.add('active');
+                } else if (currentFrame === 4 && idx + 1 <= 3) {
+                    step.classList.add('completed');
+                } else if (currentFrame === 0 && idx === 0) {
+                    step.classList.add('active');
+                }
+            });
+        }
+
+        // Валидация шага 1
+        function validateStep1() {
+            const firstname = document.getElementById('firstname').value.trim();
+            const lastname = document.getElementById('lastname').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const country = document.getElementById('country').value;
+            const pwd = document.getElementById('password').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            const isValid = firstname && lastname && email && address && country && pwd && confirm && pwd === confirm;
+            document.getElementById('nextBtn1').disabled = !isValid;
+        }
+
+        // Валидация шага 2
+        const phoneInput = document.getElementById('phone');
+        const sendCodeBtn = document.getElementById('sendCodeBtn');
+        const verifyCodeInput = document.getElementById('verifyCode');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const nextBtn2 = document.getElementById('nextBtn2');
+
+        phoneInput.addEventListener('input', () => {
+            const phone = phoneInput.value.trim();
+            sendCodeBtn.disabled = phone.length < 10;
+        });
+
+        sendCodeBtn.addEventListener('click', () => {
+            document.getElementById('codeSection').style.display = 'block';
+            alert('Код отправлен! (Введите любой 4-значный код)');
+        });
+
+        verifyCodeInput.addEventListener('input', () => {
+            const code = verifyCodeInput.value;
+            verifyBtn.disabled = code.length !== 4;
+        });
+
+        verifyBtn.addEventListener('click', () => {
+            const code = verifyCodeInput.value;
+            if (code.length === 4 && /^\d+$/.test(code)) {
+                codeVerified = true;
+                nextBtn2.disabled = false;
+                alert('Код подтвержден!');
+            } else {
+                alert('Введите 4-значный код');
+            }
+        });
+
+        // Валидация шага 3
+        function validateStep3() {
+            const c1 = document.getElementById('card1').value.length === 4;
+            const c2 = document.getElementById('card2').value.length === 4;
+            const c3 = document.getElementById('card3').value.length === 4;
+            const c4 = document.getElementById('card4').value.length === 4;
+            const expiry = /^\d{2}\/\d{2}$/.test(document.getElementById('expiry').value);
+            const cvv = document.getElementById('cvv').value.length === 3;
+            const agree = document.getElementById('agreeTerms').checked;
+            document.getElementById('finishBtn').disabled = !(c1 && c2 && c3 && c4 && expiry && cvv && agree);
+        }
+
+        // Автопереход по полям карты
+        for (let i = 1; i <= 4; i++) {
+            document.getElementById(`card${i}`).addEventListener('input', (e) => {
+                if (e.target.value.length === 4 && i < 4) {
+                    document.getElementById(`card${i+1}`).focus();
+                }
+                validateStep3();
+            });
+        }
+        document.getElementById('expiry').addEventListener('input', (e) => {
+            let val = e.target.value.replace(/\D/g, '');
+            if (val.length >= 2) e.target.value = val.slice(0,2) + '/' + val.slice(2,4);
+            validateStep3();
+        });
+        document.getElementById('cvv').addEventListener('input', validateStep3);
+        document.getElementById('agreeTerms').addEventListener('change', validateStep3);
+
+        // Кнопки навигации
+        document.getElementById('startRegBtn').addEventListener('click', () => {
+            resetAllFields();
+            showFrame(1);
+        });
+        document.getElementById('cancelBtn1').addEventListener('click', () => showFrame(0));
+        document.getElementById('nextBtn1').addEventListener('click', () => showFrame(2));
+        document.getElementById('backBtn2').addEventListener('click', () => showFrame(1));
+        document.getElementById('nextBtn2').addEventListener('click', () => showFrame(3));
+        document.getElementById('backBtn3').addEventListener('click', () => showFrame(2));
+        document.getElementById('finishBtn').addEventListener('click', () => showFrame(4));
+        
+        // Кнопка "На главную" - полный сброс
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            resetAllFields();
+            showFrame(0);
+        });
+
+        // Слушатели для шага 1
+        ['firstname', 'lastname', 'email', 'address', 'country', 'password', 'confirmPassword'].forEach(id => {
+            document.getElementById(id).addEventListener('input', validateStep1);
+        });
+
+        showFrame(0);
+    </script>
+</body>
+</html>
