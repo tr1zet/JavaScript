@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Улискин Даниил - Лабораторная работа 7</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14pt;
+            margin: 20px;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        h2 {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+            font-size: 18pt;
+        }
+        .task {
+            margin: 25px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .task-title {
+            font-weight: bold;
+            font-size: 16pt;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12pt;
+            font-family: 'Times New Roman', Times, serif;
+            margin: 5px;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        input, select {
+            font-size: 12pt;
+            padding: 5px;
+            margin: 5px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        #text {
+            background: #ffeb3b;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .line {
+            width: 300px;
+            height: 5px;
+            background: black;
+            margin: 15px 0;
+            transition: all 0.3s;
+        }
+        .salary-table {
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .salary-table td, .salary-table th {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        .salary-table input {
+            width: 100px;
+        }
+        .result-field {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 5px;
+        }
+        .coord-info {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Лабораторная работа №7<br>JavaScript в браузере - 2</h1>
+
+    <!-- ЗАДАНИЕ 1 -->
+    <div class="task">
+        <div class="task-title">Задание 1. Исчезающий элемент</div>
+        <div id="text">Этот элемент исчезнет при нажатии на кнопку</div>
+        <button onclick="hideDiv()">Скрыть div</button>
+        <button onclick="showDiv()">Показать div</button>
+    </div>
+
+    <!-- ЗАДАНИЕ 2 -->
+    <div class="task">
+        <div class="task-title">Задание 2. Кнопка скрывает себя</div>
+        <button id="selfHideBtn" onclick="hideSelf(this)">Нажми меня, я исчезну</button>
+    </div>
+
+    <!-- ЗАДАНИЕ 3 -->
+    <div class="task">
+        <div class="task-title">Задание 3. Координаты клика мыши</div>
+        <button id="enableCoordsBtn">Включить отслеживание кликов</button>
+        <button id="disableCoordsBtn">Выключить</button>
+        <div id="coordsDisplay" class="coord-info">Координаты появятся здесь после клика</div>
+    </div>
+
+    <!-- ЗАДАНИЕ 4 -->
+    <div class="task">
+        <div class="task-title">Задание 4. Щелчок по странице</div>
+        <button id="enableAlertBtn">Включить alert при клике</button>
+        <button id="disableAlertBtn">Выключить</button>
+        <p><small>После включения, при клике в любом месте страницы появится alert</small></p>
+    </div>
+
+    <!-- ЗАДАНИЕ 5 -->
+    <div class="task">
+        <div class="task-title">Задание 5. Изменение текста в поле</div>
+        <input type="text" id="changeTextInput" placeholder="Введите текст и нажмите Enter или кликните вне поля">
+        <p><small>При изменении текста появится alert</small></p>
+    </div>
+
+    <!-- ЗАДАНИЕ 6 -->
+    <div class="task">
+        <div class="task-title">Задание 6. Средняя зарплата за 6 месяцев</div>
+        <form id="salaryForm">
+            <table class="salary-table">
+                <tr><th>Месяц</th><th>Начисленная зарплата</th></tr>
+                <tr><td>Январь</td><td><input type="number" id="sal1" value="10000"></td></tr>
+                <tr><td>Февраль</td><td><input type="number" id="sal2" value="12000"></td></tr>
+                <tr><td>Март</td><td><input type="number" id="sal3" value="11000"></td></tr>
+                <tr><td>Апрель</td><td><input type="number" id="sal4" value="13000"></td></tr>
+                <tr><td>Май</td><td><input type="number" id="sal5" value="12500"></td></tr>
+                <tr><td>Июнь</td><td><input type="number" id="sal6" value="14000"></td></tr>
+            </table>
+            <button type="button" id="calcSalaryBtn">Вычислить</button>
+            <div class="result-field">
+                <strong>Средняя зарплата:</strong> 
+                <input type="text" id="avgResult" readonly style="background:#fff; width:150px;">
+            </div>
+        </form>
+    </div>
+
+    <!-- ЗАДАНИЕ 7 -->
+    <div class="task">
+        <div class="task-title">Задание 7. Изменение линии</div>
+        <div id="line" class="line"></div>
+        <button id="changeSizeBtn">Изменить размер</button>
+        <button id="changePosBtn">Изменить положение</button>
+        <button id="changeColorBtn">Изменить цвет</button>
+        <button id="resetLineBtn">Сбросить линию</button>
+    </div>
+</div>
+
+<script>
+    // ========== ЗАДАНИЕ 1 ==========
+    function hideDiv() {
+        document.getElementById('text').style.display = 'none';
+    }
+    function showDiv() {
+        document.getElementById('text').style.display = 'block';
+    }
+
+    // ========== ЗАДАНИЕ 2 ==========
+    function hideSelf(btn) {
+        btn.style.display = 'none';
+    }
+
+    // ========== ЗАДАНИЕ 3 ==========
+    let coordTracking = false;
+    function showCoords(e) {
+        if(coordTracking) {
+            document.getElementById('coordsDisplay').innerHTML = 
+                `Координаты клика: X = ${e.clientX}, Y = ${e.clientY}`;
+        }
+    }
+    document.getElementById('enableCoordsBtn').addEventListener('click', () => {
+        coordTracking = true;
+        document.getElementById('coordsDisplay').innerHTML = 'Отслеживание включено. Кликните в любом месте страницы.';
+        document.addEventListener('click', showCoords);
+    });
+    document.getElementById('disableCoordsBtn').addEventListener('click', () => {
+        coordTracking = false;
+        document.removeEventListener('click', showCoords);
+        document.getElementById('coordsDisplay').innerHTML = 'Отслеживание выключено.';
+    });
+
+    // ========== ЗАДАНИЕ 4 ==========
+    let alertEnabled = false;
+    function showClickAlert() {
+        if(alertEnabled) {
+            alert('Был щелчок!');
+        }
+    }
+    document.getElementById('enableAlertBtn').addEventListener('click', () => {
+        alertEnabled = true;
+        document.addEventListener('click', showClickAlert);
+        alert('Alert при клике включен!');
+    });
+    document.getElementById('disableAlertBtn').addEventListener('click', () => {
+        alertEnabled = false;
+        document.removeEventListener('click', showClickAlert);
+        alert('Alert при клике выключен');
+    });
+
+    // ========== ЗАДАНИЕ 5 ==========
+    document.getElementById('changeTextInput').addEventListener('change', function() {
+        alert('Текст был изменен!!!');
+    });
+
+    // ========== ЗАДАНИЕ 6 ==========
+    function calculateAverage() {
+        let sum = 0;
+        for(let i = 1; i <= 6; i++) {
+            let val = parseFloat(document.getElementById(`sal${i}`).value);
+            if(isNaN(val)) val = 0;
+            sum += val;
+        }
+        let avg = sum / 6;
+        document.getElementById('avgResult').value = avg.toFixed(2);
+    }
+    document.getElementById('calcSalaryBtn').addEventListener('click', calculateAverage);
+    // Установить значение по умолчанию при загрузке
+    window.addEventListener('load', () => {
+        calculateAverage();
+    });
+
+    // ========== ЗАДАНИЕ 7 ==========
+    let lineWidth = 300;
+    let lineMarginTop = 0;
+    let lineMarginLeft = 0;
+    let colorIndex = 0;
+    const colors = ['black', 'red', 'blue', 'green', 'orange', 'purple', 'brown', 'pink'];
+    
+    const line = document.getElementById('line');
+    
+    function updateLine() {
+        line.style.width = lineWidth + 'px';
+        line.style.marginTop = lineMarginTop + 'px';
+        line.style.marginLeft = lineMarginLeft + 'px';
+    }
+    
+    document.getElementById('changeSizeBtn').addEventListener('click', () => {
+        lineWidth += 50;
+        if(lineWidth > 600) lineWidth = 100;
+        updateLine();
+    });
+    
+    document.getElementById('changePosBtn').addEventListener('click', () => {
+        lineMarginTop += 15;
+        lineMarginLeft += 25;
+        if(lineMarginTop > 120) lineMarginTop = 0;
+        if(lineMarginLeft > 250) lineMarginLeft = 0;
+        updateLine();
+    });
+    
+    document.getElementById('changeColorBtn').addEventListener('click', () => {
+        colorIndex = (colorIndex + 1) % colors.length;
+        line.style.backgroundColor = colors[colorIndex];
+    });
+    
+    document.getElementById('resetLineBtn').addEventListener('click', () => {
+        lineWidth = 300;
+        lineMarginTop = 0;
+        lineMarginLeft = 0;
+        colorIndex = 0;
+        line.style.backgroundColor = 'black';
+        updateLine();
+    });
+</script>
+</body>
+</html>
