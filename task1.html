@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Задание 1: Факты о животных (с переводом)</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; text-align: center; }
+        button { margin: 5px; padding: 8px 16px; cursor: pointer; font-size: 14px; }
+        img { max-width: 400px; border-radius: 20px; margin-top: 20px; width: 400px; height: 300px; object-fit: cover; background: #f0f0f0; }
+        #animalInfo { margin-top: 30px; }
+        .fact-box { background: #f5f5f5; padding: 20px; border-radius: 15px; margin-top: 20px; }
+        #animalFact { font-size: 18px; line-height: 1.5; }
+        .loading { color: #666; font-style: italic; }
+        .animal-btn { font-size: 18px; padding: 10px 20px; margin: 5px; }
+        .translation-note { font-size: 12px; color: #999; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🐾 Интересные факты о животных 🐾</h1>
+    <div id="greeting">
+        <h2>Привет, <span id="userName">...</span>!</h2>
+        <button id="rerollNameBtn">🎲 Новое имя</button>
+        <button id="nextBtn">Далее →</button>
+    </div>
+    <div id="animalSelect" style="display: none;">
+        <h3>Кто тебе интересен?</h3>
+        <button class="animal-btn" data-animal="cat">🐱 Кошка</button>
+        <button class="animal-btn" data-animal="dog">🐶 Собака</button>
+        <button class="animal-btn" data-animal="fox">🦊 Лиса</button>
+    </div>
+    <div id="animalInfo" style="display: none;">
+        <img id="animalImg" src="" alt="Фото животного">
+        <div class="fact-box">
+            <p id="animalFact" style="font-size: 18px;"></p>
+            <div class="translation-note" id="translationNote"></div>
+        </div>
+        <button id="newFactBtn">🔄 Новый факт</button>
+        <button id="backBtn">◀ Назад</button>
+    </div>
+
+    <script>
+        let currentAnimal = null;
+
+        const imagesDB = {
+            cat: [
+                "images/cat1.jpg",
+                "images/cat2.jpg",
+                "images/cat3.jpg",
+            ],
+            dog: [
+                "images/dog1.jpg",
+                "images/dog2.jpg",
+                "images/dog3.jpg",
+            ],
+            fox: [
+                "images/fox1.jpg",
+                "images/fox2.jpg",
+                "images/fox3.jpg",
+            ]
+        };
+
+        const factsDB_EN = {
+            cat: [
+                "Cats sleep up to 16 hours a day — that's 2/3 of their life!",
+                "Cats have 32 muscles in each ear, so they can rotate them 180 degrees.",
+                "A cat can make about 100 different sounds — dogs only 10.",
+                "Whiskers help a cat understand if it can fit through an opening.",
+                "Cats cannot taste sweet flavors.",
+                "A cat's heart beats twice as fast as a human's — 110-140 beats per minute.",
+                "A cat can jump to a height 5 times its own height.",
+                "Every cat has a unique nose print, like a human fingerprint.",
+                "Ancient Egyptians shaved their eyebrows as a sign of mourning when their cat died.",
+                "Cats purr not only from pleasure but also for self-healing — vibrations speed up healing."
+            ],
+            dog: [
+                "A dog's nose is like a fingerprint — every dog has a unique nose print.",
+                "Dogs can understand up to 250 words and gestures — like a 2-year-old child.",
+                "A dog's tail indicates mood: right (joy), left (anxiety).",
+                "Basalt is the oldest dog breed, about 5000 years old.",
+                "Dogs dream, especially puppies and elderly dogs.",
+                "A dog's sense of smell is 10,000 – 100,000 times better than a human's.",
+                "Dogs can sense the Earth's magnetic field and use it for orientation.",
+                "Dogs only have sweat glands on their paws.",
+                "The oldest dog in the world lived to be 29 years old (203 human years in dog years).",
+                "Dogs can detect smells from up to 20 km away."
+            ],
+            fox: [
+                "Foxes use the Earth's magnetic field to hunt — they jump on prey strictly to the northeast.",
+                "The fox is the only canine that can retract its claws like a cat.",
+                "In Japan, there is an island where tame foxes live — tourists can feed them.",
+                "Foxes can make about 40 different sounds.",
+                "A fox's tail is called a 'brush' and helps with balance and warmth.",
+                "The Arctic fox can survive at temperatures as low as -70°C.",
+                "Foxes are excellent parents — they care for their cubs together.",
+                "A fox can run up to 50 km/h and jump 2 meters high.",
+                "In many cultures, the fox is considered a symbol of cunning and intelligence.",
+                "Foxes live in burrows that can have multiple exits in case of danger."
+            ]
+        };
+
+        async function translateText(text, targetLang = "ru") {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Translation error");
+                const data = await response.json();
+                return data[0][0][0];
+            } catch (error) {
+                console.error("Ошибка перевода:", error);
+                return text; // возвращаем оригинал, если перевод не удался
+            }
+        }
+
+        // Получение случайного английского факта
+        function getRandomFactEN(animal) {
+            const facts = factsDB_EN[animal];
+            return facts[Math.floor(Math.random() * facts.length)];
+        }
+
+        // Получение случайной картинки
+        function getRandomImage(animal) {
+            const images = imagesDB[animal];
+            return images[Math.floor(Math.random() * images.length)];
+        }
+
+        // Загрузка картинки + перевод факта
+        async function loadAnimalInfo() {
+            const img = document.getElementById("animalImg");
+            const factElem = document.getElementById("animalFact");
+            const noteElem = document.getElementById("translationNote");
+            
+            factElem.innerHTML = '<span class="loading">🔄 Загрузка факта...</span>';
+            noteElem.innerHTML = '';
+            
+            const imageUrl = getRandomImage(currentAnimal);
+            img.src = imageUrl;
+            
+            const englishFact = getRandomFactEN(currentAnimal);
+            factElem.innerHTML = '<span class="loading">🌍 Перевод на русский...</span>';
+            const russianFact = await translateText(englishFact, "ru");
+            
+            factElem.textContent = russianFact;
+            noteElem.innerHTML = `📝 Оригинал: "${englishFact.substring(0, 80)}..."`;
+        }
+
+        // Обновление  факта 
+        async function updateFactOnly() {
+            const factElem = document.getElementById("animalFact");
+            const noteElem = document.getElementById("translationNote");
+            
+            factElem.innerHTML = '<span class="loading">🔄 Загрузка нового факта...</span>';
+            noteElem.innerHTML = '';
+            
+            const englishFact = getRandomFactEN(currentAnimal);
+            
+            factElem.innerHTML = '<span class="loading">🌍 Перевод...</span>';
+            const russianFact = await translateText(englishFact, "ru");
+            
+            factElem.textContent = russianFact;
+            noteElem.innerHTML = `📝 Оригинал: "${englishFact.substring(0, 80)}..."`;
+        }
+
+        // Получение случайного имени из API
+        async function getRandomName() {
+            const proxy = "https://cors-anywhere.herokuapp.com/";
+            const url = "https://random-data-api.com/api/v2/users?size=1";
+            try {
+                const response = await fetch(proxy + url);
+                if (!response.ok) throw new Error("HTTP error");
+                const data = await response.json();
+                return data[0].first_name;
+            } catch (error) {
+                console.log("Использую локальные имена");
+                const names = ["Иван","Александра","Даниил","Марина","Антон","Евгения","Сергей","Алина","Алексей","Анна"];
+                return names[Math.floor(Math.random() * names.length)];
+            }
+        }
+
+        // Инициализация страницы
+        async function init() {
+            const nameSpan = document.getElementById("userName");
+            const rerollBtn = document.getElementById("rerollNameBtn");
+            const nextBtn = document.getElementById("nextBtn");
+            const greetingDiv = document.getElementById("greeting");
+            const animalSelectDiv = document.getElementById("animalSelect");
+            const animalInfoDiv = document.getElementById("animalInfo");
+            const newFactBtn = document.getElementById("newFactBtn");
+            const backBtn = document.getElementById("backBtn");
+
+            let currentName = await getRandomName();
+            nameSpan.textContent = currentName;
+
+            rerollBtn.onclick = async () => {
+                nameSpan.textContent = "⏳";
+                const newName = await getRandomName();
+                currentName = newName;
+                nameSpan.textContent = currentName;
+            };
+
+            nextBtn.onclick = () => {
+                greetingDiv.style.display = "none";
+                animalSelectDiv.style.display = "block";
+            };
+
+            document.querySelectorAll("[data-animal]").forEach(btn => {
+                btn.onclick = async () => {
+                    currentAnimal = btn.dataset.animal;
+                    animalSelectDiv.style.display = "none";
+                    animalInfoDiv.style.display = "block";
+                    await loadAnimalInfo();
+                };
+            });
+
+            newFactBtn.onclick = async () => {
+                if (currentAnimal) {
+                    await updateFactOnly();
+                }
+            };
+
+            backBtn.onclick = () => {
+                animalInfoDiv.style.display = "none";
+                animalSelectDiv.style.display = "block";
+            };
+        }
+
+        init();
+    </script>
+</body>
+</html>

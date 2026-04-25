@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Задание 3: Таблица Human</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 1300px; margin: 0 auto; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f0f0f0; }
+        button { margin: 5px; padding: 8px 16px; cursor: pointer; }
+        .filters { margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <h1>📋 Управление данными о людях</h1>
+    <button id="loadBtn">📂 Загрузить</button>
+    <button id="addBtn">➕ Добавить</button>
+    <button id="deleteSelectedBtn">🗑️ Удалить выбранные</button>
+    <div class="filters">
+        <strong>Фильтр по полу:</strong>
+        <button id="filterAll">Все</button>
+        <button id="filterMale">Мужчины</button>
+        <button id="filterFemale">Женщины</button>
+    </div>
+    <div id="tableContainer"></div>
+
+    <script>
+        let currentData = [];
+        let currentFilter = "all";
+
+        // Модуль humansData
+        const humansData = {
+            getData: async () => {
+                const size = Math.floor(Math.random() * 13) + 3;
+                const firstNames = ["Иван","Александра","Даниил","Марина","Антон","Евгения","Сергей","Алина","Алексей","Анна"];
+                const lastNames = ["Толкачев","Куракова","Улискин","Симонова","Чистюхин","Васильева"];
+                const cities = ["Москва","СПб","Новосибирск","Кемеровог","Казань"];
+                const streets = ["Ленина","Пушкина","Гагарина","Мира"];
+                const phones = ["+7(900)111-2233","+7(901)222-3344","+7(902)333-4455"];
+                
+                const humans = [];
+                for (let i = 0; i < size; i++) {
+                    humans.push({
+                        id: Date.now() + i + Math.random(),
+                        name: firstNames[Math.floor(Math.random() * firstNames.length)],
+                        surname: lastNames[Math.floor(Math.random() * lastNames.length)],
+                        age: Math.floor(Math.random() * 80) + 5,
+                        gender: Math.random() > 0.5 ? "male" : "female",
+                        address: `${cities[Math.floor(Math.random() * cities.length)]}, ул.${streets[Math.floor(Math.random() * streets.length)]}, д.${Math.floor(Math.random()*100)}`,
+                        phone: phones[Math.floor(Math.random() * phones.length)]
+                    });
+                }
+                return humans;
+            }
+        };
+
+        function renderTable() {
+            let filteredData = [...currentData];
+            if (currentFilter === "male") filteredData = filteredData.filter(h => h.gender === "male");
+            if (currentFilter === "female") filteredData = filteredData.filter(h => h.gender === "female");
+            
+            const container = document.getElementById("tableContainer");
+            if (filteredData.length === 0) {
+                container.innerHTML = "<p>Нет данных</p>";
+                return;
+            }
+            
+            const table = document.createElement("table");
+            table.innerHTML = `<thead>
+                <tr><th><input type="checkbox" id="selectAll"></th><th>Имя</th><th>Фамилия</th><th>Возраст</th><th>Пол</th><th>Адрес</th><th>Телефон</th><th>Действия</th></tr>
+                </thead><tbody id="tableBody"></tbody>`;
+            
+            const tbody = table.querySelector("#tableBody");
+            filteredData.forEach(human => {
+                const row = tbody.insertRow();
+                let bgColor = human.age < 18 ? "#c8e6c9" : (human.age <= 60 ? "#fff9c4" : "#ffcdd2");
+                row.style.backgroundColor = bgColor;
+                row.innerHTML = `
+                    <td><input type="checkbox" class="rowCheckbox" data-id="${human.id}"></td>
+                    <td contenteditable="true" class="editable" data-field="name" data-id="${human.id}">${human.name}</td>
+                    <td contenteditable="true" class="editable" data-field="surname" data-id="${human.id}">${human.surname}</td>
+                    <td contenteditable="true" class="editable" data-field="age" data-id="${human.id}">${human.age}</td>
+                    <td><select class="genderSelect" data-id="${human.id}">
+                        <option value="male" ${human.gender === "male" ? "selected" : ""}>Мужской</option>
+                        <option value="female" ${human.gender === "female" ? "selected" : ""}>Женский</option>
+                    </select></td>
+                    <td contenteditable="true" class="editable" data-field="address" data-id="${human.id}">${human.address}</td>
+                    <td contenteditable="true" class="editable" data-field="phone" data-id="${human.id}">${human.phone}</td>
+                    <td><button onclick="deleteRow(${human.id})">🗑️</button></td>
+                `;
+            });
+            
+            container.innerHTML = "";
+            container.appendChild(table);
+            
+            // Редактирование
+            document.querySelectorAll(".editable").forEach(el => {
+                el.addEventListener("blur", (e) => {
+                    const id = parseFloat(e.target.dataset.id);
+                    const field = e.target.dataset.field;
+                    let newValue = e.target.innerText;
+                    const human = currentData.find(h => h.id === id);
+                    if (human) {
+                        if (field === "age") newValue = parseInt(newValue);
+                        human[field] = newValue;
+                        renderTable();
+                    }
+                });
+            });
+            
+            document.querySelectorAll(".genderSelect").forEach(select => {
+                select.addEventListener("change", (e) => {
+                    const id = parseFloat(e.target.dataset.id);
+                    const human = currentData.find(h => h.id === id);
+                    if (human) human.gender = e.target.value;
+                    renderTable();
+                });
+            });
+            
+            document.getElementById("selectAll").onclick = (e) => {
+                document.querySelectorAll(".rowCheckbox").forEach(cb => cb.checked = e.target.checked);
+            };
+        }
+        
+        window.deleteRow = (id) => {
+            currentData = currentData.filter(h => h.id !== id);
+            renderTable();
+        };
+        
+        function deleteSelected() {
+            const checkboxes = document.querySelectorAll(".rowCheckbox:checked");
+            const ids = Array.from(checkboxes).map(cb => parseFloat(cb.dataset.id));
+            currentData = currentData.filter(h => !ids.includes(h.id));
+            renderTable();
+        }
+        
+        function addHuman() {
+            currentData.push({
+                id: Date.now(),
+                name: "Новый",
+                surname: "Пользователь",
+                age: 25,
+                gender: "male",
+                address: "г. Москва, ул. Новая, д.1",
+                phone: "+7(999)123-4567"
+            });
+            renderTable();
+        }
+        
+        function setFilter(filter) {
+            currentFilter = filter;
+            renderTable();
+        }
+        
+        async function loadData() {
+            currentData = await humansData.getData();
+            renderTable();
+        }
+        
+        document.getElementById("loadBtn").onclick = loadData;
+        document.getElementById("addBtn").onclick = addHuman;
+        document.getElementById("deleteSelectedBtn").onclick = deleteSelected;
+        document.getElementById("filterAll").onclick = () => setFilter("all");
+        document.getElementById("filterMale").onclick = () => setFilter("male");
+        document.getElementById("filterFemale").onclick = () => setFilter("female");
+        
+        console.log("✅ Готово. Нажмите 'Загрузить'");
+    </script>
+</body>
+</html>

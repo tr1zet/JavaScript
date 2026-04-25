@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Задание 2: XHR запросы (Callback + Promise + async/await)</title>
+    <style>
+        body { font-family: Arial; max-width: 900px; margin: 20px auto; padding: 20px; }
+        pre { background: #f0f0f0; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .status { color: green; font-weight: bold; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        .output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>📡 Задание 2: Работа с API через XHR</h1>
+    <p>5 последовательных запросов к публичным API</p>
+    <button id="runCallbackBtn">▶️ Запустить Callback версию</button>
+    <button id="runPromiseBtn">▶️ Запустить Promise (then) версию</button>
+    <button id="runAsyncBtn">▶️ Запустить Async/Await версию</button>
+    <h3>Результат:</h3>
+    <div id="output" class="output">Нажмите на любую кнопку...</div>
+
+    <script>
+        const output = document.getElementById("output");
+
+        function log(message, isError = false) {
+            const span = document.createElement("div");
+            span.textContent = message;
+            span.style.color = isError ? "#ff6b6b" : "#d4d4d4";
+            span.style.margin = "5px 0";
+            output.appendChild(span);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            output.innerHTML = "";
+        }
+
+        
+        function request(url, callback) {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", url);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        callback(null, data);
+                    } catch (e) {
+                        callback(new Error("Ошибка парсинга JSON"), null);
+                    }
+                } else {
+                    callback(new Error(`HTTP ${xhr.status}: ${url}`), null);
+                }
+            };
+            xhr.onerror = function() {
+                callback(new Error(`Сетевая ошибка: ${url}`), null);
+            };
+            xhr.send();
+        }
+
+        
+        function requestPromise(url) {
+            return new Promise((resolve, reject) => {
+                request(url, (err, data) => {
+                    if (err) reject(err);
+                    else resolve(data);
+                });
+            });
+        }
+
+        // Список API для запросов
+        const apiList = [
+            { name: "📝 Пост", url: "https://jsonplaceholder.typicode.com/posts/1", field: "title" },
+            { name: "👤 Пользователь", url: "https://jsonplaceholder.typicode.com/users/1", field: "name" },
+            { name: "💬 Комментарий", url: "https://jsonplaceholder.typicode.com/comments/1", field: "name" },
+            { name: "📁 Альбом", url: "https://jsonplaceholder.typicode.com/albums/1", field: "title" },
+            { name: "✅ Задача", url: "https://jsonplaceholder.typicode.com/todos/1", field: "title" }
+        ];
+
+        //3. CALLBACK ВЕРСИЯ 
+        function runCallbackVersion() {
+            clearOutput();
+            log("🚀 Запуск Callback версии (вложенные запросы)...\n", false);
+            
+            function makeRequest(index) {
+                if (index >= apiList.length) {
+                    log("\n✅ Все 5 запросов выполнены (Callback)", false);
+                    return;
+                }
+                const api = apiList[index];
+                request(api.url, (err, data) => {
+                    if (err) {
+                        log(`❌ Ошибка: ${err.message}`, true);
+                    } else {
+                        log(`${index+1}. ${api.name}: ${data[api.field]}`, false);
+                    }
+                    makeRequest(index + 1);
+                });
+            }
+            makeRequest(0);
+        }
+
+        //PROMISE (THEN) ВЕРСИЯ 
+        async function runPromiseVersion() {
+            clearOutput();
+            log("🚀 Запуск Promise (then) версии...\n", false);
+            
+            let promiseChain = Promise.resolve();
+            apiList.forEach((api, idx) => {
+                promiseChain = promiseChain.then(() => requestPromise(api.url))
+                    .then(data => {
+                        log(`${idx+1}. ${api.name}: ${data[api.field]}`, false);
+                    })
+                    .catch(err => {
+                        log(`❌ Ошибка в ${api.name}: ${err.message}`, true);
+                    });
+            });
+            
+            promiseChain.then(() => {
+                log("\n✅ Все 5 запросов выполнены (Promise)", false);
+            });
+        }
+
+        //ASYNC/AWAIT ВЕРСИЯ
+        async function runAsyncVersion() {
+            clearOutput();
+            log("🚀 Запуск Async/Await версии...\n", false);
+            
+            try {
+                for (let i = 0; i < apiList.length; i++) {
+                    const api = apiList[i];
+                    const data = await requestPromise(api.url);
+                    log(`${i+1}. ${api.name}: ${data[api.field]}`, false);
+                }
+                log("\n✅ Все 5 запросов выполнены (Async/Await)", false);
+            } catch (err) {
+                log(`❌ Ошибка: ${err.message}`, true);
+            }
+        }
+
+        window.requestExample = function() {
+            clearOutput();
+            log("📌 Демонстрация функции request() с коллбэком:", false);
+            request("https://jsonplaceholder.typicode.com/posts/1", (err, data) => {
+                if (err) {
+                    log(`Ошибка: ${err.message}`, true);
+                } else {
+                    log(`✅ Заголовок поста: ${data.title}`, false);
+                }
+            });
+        };
+
+        
+        document.getElementById("runCallbackBtn").onclick = runCallbackVersion;
+        document.getElementById("runPromiseBtn").onclick = runPromiseVersion;
+        document.getElementById("runAsyncBtn").onclick = runAsyncVersion;
+    </script>
+</body>
+</html>
